@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Iván Jomin Kim Taveras - PhD Candidate in Economics</title>
+    <title>Iván Jomin Kim Taveras</title>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -31,21 +31,11 @@
         }
     </style>
     <script>
-        // Theme switcher logic
+        // This script needs to be in the <head> to prevent a flash of the wrong theme.
         if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
           document.documentElement.classList.add('dark')
         } else {
           document.documentElement.classList.remove('dark')
-        }
-
-        function toggleTheme() {
-          if (document.documentElement.classList.contains('dark')) {
-            document.documentElement.classList.remove('dark');
-            localStorage.theme = 'light';
-          } else {
-            document.documentElement.classList.add('dark');
-            localStorage.theme = 'dark';
-          }
         }
     </script>
 </head>
@@ -53,9 +43,9 @@
 
     <!-- Header -->
     <header class="fixed top-0 left-0 right-0 bg-gray-50/80 dark:bg-gray-900/80 backdrop-blur-sm z-10">
-        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex items-center justify-between h-16">
-                <h1 class="text-xl font-bold text-gray-900 dark:text-white">Iván Jomin Kim Taveras</h1>
+                <h1 class="text-xl font-bold text-gray-900 dark:text-white whitespace-nowrap">Iván Jomin Kim Taveras</h1>
                 <button id="theme-toggle-btn" aria-label="Toggle theme" class="p-2 rounded-full text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-50 dark:focus:ring-offset-gray-900 focus:ring-blue-500">
                     <svg class="h-6 w-6 block dark:hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.95-4.243l-1.591 1.591M5.25 12H3m4.243-4.95l-1.591-1.591M12 4.5a7.5 7.5 0 100 15 7.5 7.5 0 000-15z" /></svg>
                     <svg class="h-6 w-6 hidden dark:block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21.752 15.002A9.718 9.718 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25c0 5.385 4.365 9.75 9.75 9.75 2.572 0 4.92-.99 6.697-2.648z" /></svg>
@@ -71,7 +61,7 @@
 
     <!-- Main Content -->
     <main class="pt-32 pb-12">
-        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12">
                 
                 <!-- Left Column: Photo and Info -->
@@ -101,10 +91,10 @@
                         <h2 class="text-2xl font-bold border-b-2 border-blue-500 pb-2 mb-4 text-gray-900 dark:text-white">About Me</h2>
                         <div id="bio-content" class="space-y-4 text-lg text-gray-700 dark:text-gray-300">
                             <p>
-                                I am a PhD candidate in Economics at Bocconi University. My research interests lie at the intersection of <span class="font-semibold">labor economics</span>, <span class="font-semibold">public finance</span>, and <span class="font-semibold">political economy</span>. 
+                                My research investigates how vulnerable populations in the developing world are affected by and adapt to the consequences of climate change, with a focus on agriculture and health. 
                             </p>
                             <p>
-                                Specifically, I study the impact of minimum wage policies on firm dynamics and the effects of media on political polarization.
+                                My Job Market Paper examines how shifts in the timing of the rainy season impact crop yields and household welfare in Sub-Saharan Africa, revealing the limits of low-cost adaptation strategies in the face of informational barriers like false onsets. My research on health connects climate change to human well-being by establishing a causal link between ocean acidification, the viability of small-scale fisheries, and neonatal mortality, quantifying the historical and future health burden of this understudied environmental stressor.
                             </p>
                             <p class="font-bold">
                                 I am on the job market in 2025-2026.
@@ -152,7 +142,7 @@
 
     <!-- Footer -->
     <footer class="bg-gray-100 dark:bg-gray-800">
-        <div class="max-w-4xl mx-auto py-4 px-4 sm:px-6 lg:px-8 text-center text-gray-500 dark:text-gray-400">
+        <div class="max-w-5xl mx-auto py-4 px-4 sm:px-6 lg:px-8 text-center text-gray-500 dark:text-gray-400">
             <p>&copy; <span id="year"></span> Iván Jomin Kim Taveras. Last updated: August 2025.</p>
         </div>
     </footer>
@@ -178,20 +168,20 @@
     </div>
 
     <script>
-        // Wait for the DOM to be fully loaded before running scripts
-        document.addEventListener('DOMContentLoaded', function() {
-            // Set current year in footer
-            document.getElementById('year').textContent = new Date().getFullYear();
+        // --- All Interactive Logic ---
 
-            // Attach theme toggle event listener
-            const themeToggleButton = document.getElementById('theme-toggle-btn');
-            if (themeToggleButton) {
-                themeToggleButton.addEventListener('click', toggleTheme);
-            }
-        });
+        // --- Theme Toggle ---
+        function toggleTheme() {
+            const isDark = document.documentElement.classList.toggle('dark');
+            localStorage.theme = isDark ? 'dark' : 'light';
+        }
+        // Attach listener to the theme toggle button.
+        document.getElementById('theme-toggle-btn').addEventListener('click', toggleTheme);
+        
+        // --- Set Footer Year ---
+        document.getElementById('year').textContent = new Date().getFullYear();
 
         // --- Gemini API Integration ---
-
         const modal = document.getElementById('gemini-modal');
         const modalTitle = document.getElementById('modal-title');
         const modalBody = document.getElementById('modal-body');
