@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Your Name - PhD Candidate in Economics</title>
+    <title> Iván Jomin Kim Taveras </title>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -55,8 +55,8 @@
     <header class="fixed top-0 left-0 right-0 bg-gray-50/80 dark:bg-gray-900/80 backdrop-blur-sm z-10">
         <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex items-center justify-between h-16">
-                <h1 class="text-xl font-bold text-gray-900 dark:text-white">Your Name</h1>
-                <button onclick="toggleTheme()" aria-label="Toggle theme" class="p-2 rounded-full text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-50 dark:focus:ring-offset-gray-900 focus:ring-blue-500">
+                <h1 class="text-xl font-bold text-gray-900 dark:text-white">Iván Jomin Kim Taveras</h1>
+                <button id="theme-toggle-btn" aria-label="Toggle theme" class="p-2 rounded-full text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-50 dark:focus:ring-offset-gray-900 focus:ring-blue-500">
                     <svg class="h-6 w-6 block dark:hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.95-4.243l-1.591 1.591M5.25 12H3m4.243-4.95l-1.591-1.591M12 4.5a7.5 7.5 0 100 15 7.5 7.5 0 000-15z" /></svg>
                     <svg class="h-6 w-6 hidden dark:block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21.752 15.002A9.718 9.718 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25c0 5.385 4.365 9.75 9.75 9.75 2.572 0 4.92-.99 6.697-2.648z" /></svg>
                 </button>
@@ -74,7 +74,7 @@
                     <div class="sticky top-24">
                         <img class="rounded-lg shadow-lg w-full h-auto object-cover" src="https://placehold.co/400x400/a0aec0/ffffff?text=Your+Photo" alt="A professional photograph of Your Name" onerror="this.onerror=null;this.src='https://placehold.co/400x400/e2e8f0/4a5568?text=Image+Not+Found';">
                         <div class="mt-6">
-                            <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Your Name</h2>
+                            <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Iván Jomin Kim Taveras</h2>
                             <p class="mt-1 text-gray-600 dark:text-gray-400">PhD Candidate in Economics</p>
                             <p class="mt-1 text-gray-600 dark:text-gray-400">Bocconi University</p>
                             <div class="mt-6 flex flex-col space-y-3">
@@ -96,10 +96,10 @@
                         <h2 class="text-2xl font-bold border-b-2 border-blue-500 pb-2 mb-4 text-gray-900 dark:text-white">About Me</h2>
                         <div id="bio-content" class="space-y-4 text-lg text-gray-700 dark:text-gray-300">
                             <p>
-                                I am a PhD candidate in Economics at Bocconi University. My research interests lie at the intersection of <span class="font-semibold">labor economics</span>, <span class="font-semibold">public finance</span>, and <span class="font-semibold">political economy</span>. 
+                                I am a PhD candidate in Economics at Bocconi University. 
                             </p>
                             <p>
-                                Specifically, I study the impact of minimum wage policies on firm dynamics and the effects of media on political polarization. I am on the job market in 2025-2026.
+                                I am on the job market in 2025-2026.
                             </p>
                         </div>
                     </section>
@@ -171,6 +171,9 @@
 
     <script>
         document.getElementById('year').textContent = new Date().getFullYear();
+
+        // Attach theme toggle event listener
+        document.getElementById('theme-toggle-btn').addEventListener('click', toggleTheme);
 
         // --- Gemini API Integration ---
 
