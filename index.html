@@ -7,13 +7,24 @@
 
     <!-- Theme configuration -->
     <script>
+      if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        document.documentElement.classList.add('dark')
+      } else {
+        document.documentElement.classList.remove('dark')
+      }
+    </script>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <script>
       tailwind.config = {
         darkMode: 'class'
       }
     </script>
-    
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Icon -->
+
+    <link rel="icon" type="image/png" href="/path/to/your-logo.png">
     
     <!-- Google Fonts: Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -286,5 +297,6 @@
     </script>
 </body>
 </html>
+
 
 
