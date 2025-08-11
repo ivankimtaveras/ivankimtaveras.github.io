@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title> Iván Kim Taveras </title>
+    <title>Iván Kim Taveras</title>
 
     <!-- Theme configuration -->
     <script>
@@ -23,7 +23,6 @@
     </script>
 
     <!-- Icon -->
-
     <link rel="icon" type="image/png" href="icon.PNG">
     
     <!-- Google Fonts: Inter -->
@@ -48,14 +47,6 @@
             transition: transform 0.3s ease;
         }
     </style>
-    <script>
-        // This script needs to be in the <head> to prevent a flash of the wrong theme.
-        if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-          document.documentElement.classList.add('dark')
-        } else {
-          document.documentElement.classList.remove('dark')
-        }
-    </script>
 </head>
 <body class="bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200 theme-transition">
 
@@ -63,7 +54,7 @@
     <header class="fixed top-0 left-0 right-0 bg-gray-50/80 dark:bg-gray-900/80 backdrop-blur-sm z-10">
         <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex items-center justify-between h-16">
-                <h1 class="text-xl font-bold text-gray-900 dark:text-white whitespace-nowrap"> </h1>
+                <h1 class="text-xl font-bold text-gray-900 dark:text-white whitespace-nowrap">Iván Jomin Kim Taveras</h1>
                 <button id="theme-toggle-btn" aria-label="Toggle theme" class="p-2 rounded-full text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-50 dark:focus:ring-offset-gray-900 focus:ring-blue-500">
                     <svg class="h-6 w-6 block dark:hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.95-4.243l-1.591 1.591M5.25 12H3m4.243-4.95l-1.591-1.591M12 4.5a7.5 7.5 0 100 15 7.5 7.5 0 000-15z" /></svg>
                     <svg class="h-6 w-6 hidden dark:block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21.752 15.002A9.718 9.718 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25c0 5.385 4.365 9.75 9.75 9.75 2.572 0 4.92-.99 6.697-2.648z" /></svg>
@@ -115,7 +106,7 @@
                                 My job market paper investigates how delays in the rainy season impact farmers in six Sub-Saharan African countries. I find that a one-week delay reduces crop yields by approximately 2% and household consumption by 1%. A key challenge is the "false onset" of rains—misleading early rainfall followed by a dry spell—which can trick farmers into planting prematurely and more than doubles the negative economic impact.
                             </p>
                             <p>
-                                I have also established a causal link between ocean acidification and human health, showing how increased ocean acidity harms small-scale fisheries, which in turn reduces the consumption of essential nutrients by pregnant women and significantly increases the risk of neonatal mortality.                            
+                                I have also established a causal link between ocean acidification and human health, showing how increased ocean acidity harms small-scale fisheries, which in turn reduces the consumption of essential nutrients by pregnant women and significantly increases the risk of neonatal mortality.
                             </p>
                             <p class="font-bold">
                                 I am on the job market in 2025-2026.
@@ -196,7 +187,6 @@
             const isDark = document.documentElement.classList.toggle('dark');
             localStorage.theme = isDark ? 'dark' : 'light';
         }
-        // Attach listener to the theme toggle button.
         document.getElementById('theme-toggle-btn').addEventListener('click', toggleTheme);
         
         // --- Set Footer Year ---
@@ -208,11 +198,6 @@
         const emailLink = document.getElementById('email-link');
         emailLink.setAttribute('href', `mailto:${user}@${domain}`);
 
-        // --- Gemini API Integration ---
-        const modal = document.getElementById('gemini-modal');
-        const modalTitle = document.getElementById('modal-title');
-        const modalBody = document.getElementById('modal-body');
-        
         // --- Gemini API Integration ---
         const modal = document.getElementById('gemini-modal');
         const modalTitle = document.getElementById('modal-title');
@@ -270,7 +255,7 @@
                         console.error("API call failed after multiple retries:", error);
                         return "Sorry, I couldn't get a response at the moment. Please try again later.";
                     }
-                    const delay = Math.pow(2, i) * 1000; // 1s, 2s, 4s
+                    const delay = Math.pow(2, i) * 1000;
                     await new Promise(res => setTimeout(res, delay));
                 }
             }
@@ -311,12 +296,3 @@
     </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
