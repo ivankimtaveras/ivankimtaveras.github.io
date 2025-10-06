@@ -5,8 +5,9 @@ on:
     - cron: '0 6 * * *'   # daily at 06:00 UTC (~08:00 Rome)
   workflow_dispatch:
 
+# We push with a PAT, so GITHUB_TOKEN can stay read-only
 permissions:
-  contents: read   # we push using PAT
+  contents: read
 
 jobs:
   sync:
@@ -17,7 +18,7 @@ jobs:
         with:
           ref: main
           fetch-depth: 0
-          token: ${{ secrets.PAT }}      # PAT must have Contents: Read & write
+          token: ${{ secrets.PAT }}   # PAT must have Contents: Read & write
 
       - name: Install tools
         run: |
@@ -27,22 +28,15 @@ jobs:
       - name: Define Dropbox source path
         run: echo "SRC_PATH=Website/Documents" >> "$GITHUB_ENV"
 
-      - name: Remote listing (prove CV exists at source)
+      - name: Sync from Dropbox
         env:
           RCLONE_DROPBOX_TOKEN: ${{ secrets.DROPBOX_TOKEN_JSON }}
           RCLONE_DROPBOX_CLIENT_ID: ${{ secrets.DROPBOX_CLIENT_ID }}
           RCLONE_DROPBOX_CLIENT_SECRET: ${{ secrets.DROPBOX_CLIENT_SECRET }}
         run: |
-          rclone lsl ":dropbox:${SRC_PATH}/CV/KimTaveras_CV.pdf" || (echo "::error::Remote CV missing (check path & case)"; exit 1)
+          rclone sync ":dropbox:${SRC_PATH}" "./docs" --fast-list
 
-      - name: rclone sync
-        env:
-          RCLONE_DROPBOX_TOKEN: ${{ secrets.DROPBOX_TOKEN_JSON }}
-          RCLONE_DROPBOX_CLIENT_ID: ${{ secrets.DROPBOX_CLIENT_ID }}
-          RCLONE_DROPBOX_CLIENT_SECRET: ${{ secrets.DROPBOX_CLIENT_SECRET }}
-        run: |
-          rclone sync ":dropbox:${SRC_PATH}" "./docs" --fast-list -vv
-
+      # Ensure PDFs are binary (no text filters/diffs)
       - name: Ensure .gitattributes for PDFs
         run: |
           {
@@ -50,43 +44,36 @@ jobs:
             echo "*.PDF binary"
           } > .gitattributes
 
-      - name: Normalise and verify PDFs
+      # Normalise PDFs (optional but safe)
+      - name: Normalise PDFs
         run: |
           shopt -s nullglob globstar
           for f in docs/**/*.pdf docs/*.pdf docs/**/*.PDF docs/*.PDF; do
             qpdf --linearize "$f" "$f.qpdf" && mv -f "$f.qpdf" "$f"
-            sig=$(hexdump -n 5 -v -e '/1 "%02X"' "$f" || true)
-            mime=$(file -b --mime-type "$f" || true)
-            echo "$f  sig=$sig  mime=$mime"
-            if [ "$sig" != "255044462D" ] || [ "$mime" != "application/pdf" ]; then
-              echo "::error::$f is not detected as a proper PDF"
-              exit 1
-            fi
           done
 
-      - name: Debug working tree
-        run: |
-          echo "---- ls docs ----"; ls -alR docs || true
-          echo "---- git status ----"; git status --porcelain=v1
-          echo "---- check-ignore ----"; git check-ignore -v docs/CV/KimTaveras_CV.pdf || true
-          echo "---- remotes ----"; git remote -v
-
-      - name: Commit changes (explicit)
+      - name: Configure git author
         run: |
           git config user.name "GitHub Actions Bot"
           git config user.email "actions@github.com"
+
+      - name: Stage and commit
+        run: |
           git add -A docs .gitattributes
           git commit -m "Docs: Auto-sync from Dropbox" || echo "No changes to commit"
 
-      - name: Push to main (explicit, with PAT)
-        env:
-          GH_TOKEN: ${{ secrets.PAT }}   # not used by git, but handy for other CLIs
+      # 👇 Pull remote changes first to avoid 'fetch first' rejection
+      - name: Rebase onto latest origin/main
         run: |
-          git push origin HEAD:main
+          git fetch origin main --depth=1
+          git pull --rebase origin main || (echo "::error::Rebase failed (conflict). Resolve manually or switch to PR flow."; exit 1)
 
-      - name: Verify CV on remote (origin/main)
+      - name: Push to main (with PAT)
+        run: git push origin HEAD:main
+
+      # Prove the CV is on the remote branch
+      - name: Verify CV on origin/main
         run: |
           git fetch origin main --depth=1
           git cat-file -e origin/main:docs/CV/KimTaveras_CV.pdf || (echo "::error::CV not on remote main"; exit 1)
           echo "OK: CV present on origin/main"
-          git log -1 --stat -- docs/CV/KimTaveras_CV.pdf
