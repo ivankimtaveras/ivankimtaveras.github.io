@@ -5,7 +5,6 @@ on:
     - cron: '0 * * * *'
   workflow_dispatch:
 
-# allow pushes from github-actions[bot]
 permissions:
   contents: write
 
@@ -23,24 +22,25 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y rclone qpdf
 
-      # Dropbox app is "App Folder" scoped; token must be JSON
       - name: Configure rclone token for Dropbox
         run: |
           echo 'RCLONE_DROPBOX_TOKEN={"access_token":"${{ secrets.DROPBOX_ACCESS_TOKEN }}","token_type":"bearer","expiry":"0001-01-01T00:00:00Z"}' >> "$GITHUB_ENV"
 
-      - name: Sync files from Dropbox (paths are relative to the app folder)
+      - name: Sync files from Dropbox (app-folder scope; no leading /)
         run: |
           rclone sync ":dropbox:Website/Documents" "./docs" --fast-list
 
-      # Make PDFs web-friendly and ensure header starts with %PDF-
-      - name: Normalise PDFs for GitHub preview
+      # Ensure GitHub treats PDFs as binary (prevents text render fallback)
+      - name: Ensure .gitattributes for PDFs
+        run: |
+          echo "*.pdf binary" > .gitattributes
+          echo "*.PDF binary" >> .gitattributes
+
+      # Normalise PDFs so they start with %PDF- and are web-friendly
+      - name: Normalise PDFs
         run: |
           shopt -s nullglob globstar
-          for f in docs/**/*.pdf docs/*.pdf; do
-            hdr=$(hexdump -n 5 -v -e '/1 "%02X"' "$f" || true)
-            if [ "$hdr" != "255044462D" ]; then
-              echo "Rewriting nonstandard PDF header: $f"
-            fi
+          for f in docs/**/*.pdf docs/*.pdf docs/**/*.PDF docs/*.PDF; do
             qpdf --linearize "$f" "$f.qpdf" && mv -f "$f.qpdf" "$f"
           done
 
@@ -50,4 +50,6 @@ jobs:
           commit_message: 'Docs: Auto-sync from Dropbox'
           commit_user_name: 'GitHub Actions Bot'
           commit_user_email: 'actions@github.com'
-          file_pattern: docs
+          file_pattern: |
+            .gitattributes
+            docs
