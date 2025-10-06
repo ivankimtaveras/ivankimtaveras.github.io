@@ -5,9 +5,8 @@ on:
     - cron: '0 6 * * *'   # daily at 06:00 UTC (~08:00 Rome)
   workflow_dispatch:
 
-# We push with PAT, so GITHUB_TOKEN can stay read-only
 permissions:
-  contents: read
+  contents: read   # we push using PAT
 
 jobs:
   sync:
@@ -18,7 +17,7 @@ jobs:
         with:
           ref: main
           fetch-depth: 0
-          token: ${{ secrets.PAT }}
+          token: ${{ secrets.PAT }}      # PAT must have Contents: Read & write
 
       - name: Install tools
         run: |
@@ -28,17 +27,14 @@ jobs:
       - name: Define Dropbox source path
         run: echo "SRC_PATH=Website/Documents" >> "$GITHUB_ENV"
 
-      # 1) Prove the CV exists on Dropbox at the expected path
-      - name: Remote listing (must show CV)
+      - name: Remote listing (prove CV exists at source)
         env:
           RCLONE_DROPBOX_TOKEN: ${{ secrets.DROPBOX_TOKEN_JSON }}
           RCLONE_DROPBOX_CLIENT_ID: ${{ secrets.DROPBOX_CLIENT_ID }}
           RCLONE_DROPBOX_CLIENT_SECRET: ${{ secrets.DROPBOX_CLIENT_SECRET }}
         run: |
-          rclone lsf ":dropbox:${SRC_PATH}/CV" || (echo "::error::Remote CV folder missing (check SRC_PATH and case)"; exit 1)
-          rclone lsl ":dropbox:${SRC_PATH}/CV/KimTaveras_CV.pdf" || (echo "::error::Remote CV file missing"; exit 1)
+          rclone lsl ":dropbox:${SRC_PATH}/CV/KimTaveras_CV.pdf" || (echo "::error::Remote CV missing (check path & case)"; exit 1)
 
-      # 2) Sync
       - name: rclone sync
         env:
           RCLONE_DROPBOX_TOKEN: ${{ secrets.DROPBOX_TOKEN_JSON }}
@@ -47,17 +43,6 @@ jobs:
         run: |
           rclone sync ":dropbox:${SRC_PATH}" "./docs" --fast-list -vv
 
-      # 3) Show what changed locally
-      - name: Show local docs & git status
-        run: |
-          echo "---- ls docs (recursive) ----"
-          ls -alR docs || true
-          echo "---- check-ignore (should be empty) ----"
-          git check-ignore -v docs/CV/KimTaveras_CV.pdf || true
-          echo "---- git status ----"
-          git status --porcelain=v1
-
-      # 4) Make PDFs binary (not ignored) + normalise
       - name: Ensure .gitattributes for PDFs
         run: |
           {
@@ -79,25 +64,27 @@ jobs:
             fi
           done
 
-      - name: Show git status after normalise
-        run: git status --porcelain=v1
+      - name: Debug working tree
+        run: |
+          echo "---- ls docs ----"; ls -alR docs || true
+          echo "---- git status ----"; git status --porcelain=v1
+          echo "---- check-ignore ----"; git check-ignore -v docs/CV/KimTaveras_CV.pdf || true
+          echo "---- remotes ----"; git remote -v
 
-      # 5) Commit & push with PAT (stage deletions too)
-      - name: Commit and push changes (to main)
-        uses: stefanzweifel/git-auto-commit-action@v5
-        with:
-          token: ${{ secrets.PAT }}                    # <-- ensure PAT is used
-          branch: main
-          commit_message: 'Docs: Auto-sync from Dropbox'
-          commit_user_name: 'GitHub Actions Bot'
-          commit_user_email: 'actions@github.com'
-          file_pattern: |
-            .gitattributes
-            docs
-          add_options: '--all'
+      - name: Commit changes (explicit)
+        run: |
+          git config user.name "GitHub Actions Bot"
+          git config user.email "actions@github.com"
+          git add -A docs .gitattributes
+          git commit -m "Docs: Auto-sync from Dropbox" || echo "No changes to commit"
 
-      # 6) Verify it’s on the remote branch
-      - name: Verify CV on origin/main
+      - name: Push to main (explicit, with PAT)
+        env:
+          GH_TOKEN: ${{ secrets.PAT }}   # not used by git, but handy for other CLIs
+        run: |
+          git push origin HEAD:main
+
+      - name: Verify CV on remote (origin/main)
         run: |
           git fetch origin main --depth=1
           git cat-file -e origin/main:docs/CV/KimTaveras_CV.pdf || (echo "::error::CV not on remote main"; exit 1)
