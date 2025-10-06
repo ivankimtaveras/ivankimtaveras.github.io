@@ -5,7 +5,7 @@ on:
     - cron: '0 * * * *'
   workflow_dispatch:
 
-# Needed so github-actions[bot] can push commits
+# allow pushes from github-actions[bot]
 permissions:
   contents: write
 
@@ -18,10 +18,10 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Install rclone
+      - name: Install tools
         run: |
           sudo apt-get update
-          sudo apt-get install -y rclone
+          sudo apt-get install -y rclone qpdf
 
       # Dropbox app is "App Folder" scoped; token must be JSON
       - name: Configure rclone token for Dropbox
@@ -31,6 +31,18 @@ jobs:
       - name: Sync files from Dropbox (paths are relative to the app folder)
         run: |
           rclone sync ":dropbox:Website/Documents" "./docs" --fast-list
+
+      # Make PDFs web-friendly and ensure header starts with %PDF-
+      - name: Normalise PDFs for GitHub preview
+        run: |
+          shopt -s nullglob globstar
+          for f in docs/**/*.pdf docs/*.pdf; do
+            hdr=$(hexdump -n 5 -v -e '/1 "%02X"' "$f" || true)
+            if [ "$hdr" != "255044462D" ]; then
+              echo "Rewriting nonstandard PDF header: $f"
+            fi
+            qpdf --linearize "$f" "$f.qpdf" && mv -f "$f.qpdf" "$f"
+          done
 
       - name: Commit and push changes
         uses: stefanzweifel/git-auto-commit-action@v5
