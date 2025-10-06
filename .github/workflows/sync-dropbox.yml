@@ -2,21 +2,22 @@ name: Sync Files from Dropbox
 
 on:
   schedule:
-    - cron: '0 6 * * *'   # daily at 06:00 UTC
+    - cron: '0 6 * * *'   # daily at 06:00 UTC (~08:00 Rome)
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read   # we push with PAT, not GITHUB_TOKEN
 
 jobs:
   sync:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository (main)
+      - name: Checkout repository (with PAT on main)
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
           ref: main
+          token: ${{ secrets.PAT }}   # ensure pushes are allowed
 
       - name: Install tools
         run: |
@@ -58,9 +59,10 @@ jobs:
       - name: Show git status (debug)
         run: git status --porcelain=v1
 
-      - name: Commit and push changes (to main)
+      - name: Commit and push changes (use PAT, push to main)
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
+          token: ${{ secrets.PAT }}                 # <— force push with PAT
           branch: main
           commit_message: 'Docs: Auto-sync from Dropbox'
           commit_user_name: 'GitHub Actions Bot'
@@ -70,10 +72,10 @@ jobs:
             docs
           add_options: '--all'
 
-      # 🔎 Prove the file is on GitHub (origin/main) after push
-      - name: Verify file on remote (origin/main)
+      # Verify it's really on origin/main (remote)
+      - name: Verify CV on remote
         run: |
           git fetch origin main --depth=1
-          git cat-file -e origin/main:docs/CV/KimTaveras_CV.pdf || (echo "::error::File not on remote main"; exit 1)
-          echo "OK: docs/CV/KimTaveras_CV.pdf is present on origin/main"
+          git cat-file -e origin/main:docs/CV/KimTaveras_CV.pdf || (echo "::error::CV not on remote main"; exit 1)
+          echo "OK: CV present on origin/main"
           git log -1 --stat -- docs/CV/KimTaveras_CV.pdf
