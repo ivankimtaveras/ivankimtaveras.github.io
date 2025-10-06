@@ -17,14 +17,20 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y rclone
 
+      # Build the JSON token rclone expects
       - name: Configure rclone token for Dropbox
         run: |
           echo 'RCLONE_DROPBOX_TOKEN={"access_token":"${{ secrets.DROPBOX_ACCESS_TOKEN }}","token_type":"bearer","expiry":"0001-01-01T00:00:00Z"}' >> "$GITHUB_ENV"
 
-      - name: Sync files from Dropbox
+      # Optional: list root of the *app folder* to verify access
+      - name: Verify Dropbox access (optional)
+        run: |
+          rclone lsd ":dropbox:/"
+
+      - name: Sync files from Dropbox (app-folder path)
         run: |
           rclone sync \
-            ":dropbox:/Apps/github-sync-app/Website/Documents" \
+            ":dropbox:/Website/Documents" \
             "./docs" \
             --fast-list
 
