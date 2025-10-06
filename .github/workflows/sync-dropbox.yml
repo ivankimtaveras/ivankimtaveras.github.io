@@ -22,7 +22,7 @@ jobs:
           rclone sync \
             --config /dev/null \
             --dropbox-token ${{ secrets.DROPBOX_ACCESS_TOKEN }} \
-            ":dropbox:/Website/Documents" \
+            ":dropbox:/Apps/github-sync-app/Website/Documents" \
             "./docs"
 
       - name: Commit and push changes
