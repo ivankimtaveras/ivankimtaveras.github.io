@@ -29,7 +29,6 @@ jobs:
           sudo apt-get install -y rclone
 
       # 3. Run rclone to sync the files from Dropbox to your repo directory
-      # IMPORTANT: Change the Dropbox source path and the local destination path
       - name: Sync files from Dropbox
         run: |
           rclone sync \
