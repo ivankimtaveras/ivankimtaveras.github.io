@@ -17,11 +17,14 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y rclone
 
-      - name: Sync files from Dropbox
-        env:
-          RCLONE_DROPBOX_TOKEN: ${{ secrets.DROPBOX_ACCESS_TOKEN }}
+      - name: Configure rclone (Dropbox token)
         run: |
-          rclone sync ":dropbox:/Website/Documents" "./docs"
+          echo "RCLONE_CONFIG_DBOX_TYPE=dropbox" >> "$GITHUB_ENV"
+          echo 'RCLONE_CONFIG_DBOX_TOKEN={"access_token":"'"${{ secrets.DROPBOX_ACCESS_TOKEN }}"'","token_type":"bearer","expiry":"0001-01-01T00:00:00Z"}' >> "$GITHUB_ENV"
+
+      - name: Sync files from Dropbox
+        run: |
+          rclone sync "DBOX:/Website/Documents" "./docs" --fast-list
 
       - name: Commit and push changes
         uses: stefanzweifel/git-auto-commit-action@v5
