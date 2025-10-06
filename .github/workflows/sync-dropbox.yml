@@ -5,25 +5,27 @@ on:
     - cron: '0 6 * * *'   # daily at 06:00 UTC (~08:00 Rome)
   workflow_dispatch:
 
+# We use a PAT for pushing; this can stay read or be omitted.
 permissions:
-  contents: read   # we push with PAT, not GITHUB_TOKEN
+  contents: read
 
 jobs:
   sync:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository (with PAT on main)
+      - name: Checkout repository (with PAT)
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          token: ${{ secrets.PAT }}   # <- use your PAT for push perms
           ref: main
-          token: ${{ secrets.PAT }}   # ensure pushes are allowed
 
       - name: Install tools
         run: |
           sudo apt-get update
           sudo apt-get install -y rclone qpdf file
 
+      # Set your Dropbox path under the *app folder* (no leading /)
       - name: Define Dropbox source path
         run: echo "SRC_PATH=Website/Documents" >> "$GITHUB_ENV"
 
@@ -35,6 +37,7 @@ jobs:
         run: |
           rclone sync ":dropbox:${SRC_PATH}" "./docs" --fast-list -vv
 
+      # Ensure PDFs are binary (no text filters/diffs)
       - name: Ensure .gitattributes for PDFs
         run: |
           {
@@ -42,6 +45,7 @@ jobs:
             echo "*.PDF binary"
           } > .gitattributes
 
+      # Normalise/linearise PDFs and verify signatures & MIME
       - name: Normalise and verify PDFs
         run: |
           shopt -s nullglob globstar
@@ -56,13 +60,9 @@ jobs:
             fi
           done
 
-      - name: Show git status (debug)
-        run: git status --porcelain=v1
-
-      - name: Commit and push changes (use PAT, push to main)
+      - name: Commit and push changes (to main)
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
-          token: ${{ secrets.PAT }}                 # <— force push with PAT
           branch: main
           commit_message: 'Docs: Auto-sync from Dropbox'
           commit_user_name: 'GitHub Actions Bot'
@@ -72,10 +72,9 @@ jobs:
             docs
           add_options: '--all'
 
-      # Verify it's really on origin/main (remote)
-      - name: Verify CV on remote
+      # Prove the file is on the remote branch after push
+      - name: Verify file on origin/main
         run: |
           git fetch origin main --depth=1
           git cat-file -e origin/main:docs/CV/KimTaveras_CV.pdf || (echo "::error::CV not on remote main"; exit 1)
           echo "OK: CV present on origin/main"
-          git log -1 --stat -- docs/CV/KimTaveras_CV.pdf
