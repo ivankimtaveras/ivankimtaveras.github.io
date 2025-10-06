@@ -35,8 +35,8 @@ jobs:
           rclone sync \
             --config /dev/null \
             --dropbox-token ${{ secrets.DROPBOX_ACCESS_TOKEN }} \
-            "C:/Users/ivank/Dropbox/Website/Documents" \
-            "https://ivankimtaveras.github.io/"
+            ":dropbox:/Website/Documents" \
+            "./docs"
 
       # 4. Use a pre-built action to automatically commit and push any changes
       - name: Commit and push changes
