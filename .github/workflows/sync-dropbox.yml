@@ -5,34 +5,32 @@ on:
     - cron: '0 * * * *'
   workflow_dispatch:
 
+# Needed so github-actions[bot] can push commits
+permissions:
+  contents: write
+
 jobs:
   sync:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Install rclone
         run: |
           sudo apt-get update
           sudo apt-get install -y rclone
 
-      # Provide a JSON token; for long-lived CI, include a refresh_token too if you have one
+      # Dropbox app is "App Folder" scoped; token must be JSON
       - name: Configure rclone token for Dropbox
         run: |
           echo 'RCLONE_DROPBOX_TOKEN={"access_token":"${{ secrets.DROPBOX_ACCESS_TOKEN }}","token_type":"bearer","expiry":"0001-01-01T00:00:00Z"}' >> "$GITHUB_ENV"
 
-      # Optional sanity check: list the app folder root (no leading slash)
-      - name: Verify Dropbox access (optional)
+      - name: Sync files from Dropbox (paths are relative to the app folder)
         run: |
-          rclone lsd ":dropbox:"
-
-      - name: Sync files from Dropbox (app-folder path; NO leading slash)
-        run: |
-          rclone sync \
-            ":dropbox:Website/Documents" \
-            "./docs" \
-            --fast-list
+          rclone sync ":dropbox:Website/Documents" "./docs" --fast-list
 
       - name: Commit and push changes
         uses: stefanzweifel/git-auto-commit-action@v5
@@ -40,3 +38,4 @@ jobs:
           commit_message: 'Docs: Auto-sync from Dropbox'
           commit_user_name: 'GitHub Actions Bot'
           commit_user_email: 'actions@github.com'
+          file_pattern: docs
