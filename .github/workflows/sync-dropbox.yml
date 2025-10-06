@@ -22,14 +22,17 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y rclone qpdf file
 
-      - name: Sync files from Dropbox (App Folder scope; no leading /)
+      - name: Sync files from Dropbox (App-Folder token; no leading /)
         env:
           RCLONE_DROPBOX_TOKEN: ${{ secrets.DROPBOX_TOKEN_JSON }}
-          # If you created the token with your OWN Dropbox app, also set:
-          # RCLONE_DROPBOX_CLIENT_ID: ${{ secrets.DROPBOX_CLIENT_ID }}
-          # RCLONE_DROPBOX_CLIENT_SECRET: ${{ secrets.DROPBOX_CLIENT_SECRET }}
+          RCLONE_DROPBOX_CLIENT_ID: ${{ secrets.DROPBOX_CLIENT_ID }}         # your app key
+          RCLONE_DROPBOX_CLIENT_SECRET: ${{ secrets.DROPBOX_CLIENT_SECRET }} # your app secret
         run: |
-          rclone sync ":dropbox:Website/Documents" "./docs" --fast-list
+          # Change this to match your folder under the app root
+          SRC_PATH="Website/Documents"
+          # (Optional) quick listing to help if path is wrong:
+          rclone lsd ":dropbox:${SRC_PATH%/*}" || true
+          rclone sync ":dropbox:${SRC_PATH}" "./docs" --fast-list
 
       # Ensure PDFs are binary (no text filters/diffs)
       - name: Ensure .gitattributes for PDFs
