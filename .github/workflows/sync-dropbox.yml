@@ -1,0 +1,47 @@
+# Name of the workflow
+name: Sync Files from Dropbox
+
+# Controls when the workflow will run
+on:
+  # Runs on a schedule (this example runs every hour)
+  schedule:
+    - cron: '0 * * * *'
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  sync:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      # 1. Checks out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 2. Install rclone, the tool used for syncing files
+      - name: Install rclone
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y rclone
+
+      # 3. Run rclone to sync the files from Dropbox to your repo directory
+      # IMPORTANT: Change the Dropbox source path and the local destination path
+      - name: Sync files from Dropbox
+        run: |
+          rclone sync \
+            --config /dev/null \
+            --dropbox-token ${{ secrets.DROPBOX_ACCESS_TOKEN }} \
+            "C:/Users/ivank/Dropbox/Website/Documents" \
+            "https://ivankimtaveras.github.io/"
+
+      # 4. Use a pre-built action to automatically commit and push any changes
+      - name: Commit and push changes
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: 'Docs: Auto-sync from Dropbox'
+          commit_user_name: 'GitHub Actions Bot'
+          commit_user_email: 'actions@github.com'
