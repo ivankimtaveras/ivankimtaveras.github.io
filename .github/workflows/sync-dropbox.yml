@@ -22,27 +22,52 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y rclone qpdf file
 
+      # <<< CHANGE THIS to the folder under your *app folder* where the changed file lives
       - name: Define Dropbox source path
         run: echo "SRC_PATH=Website/Documents" >> "$GITHUB_ENV"
 
-      # Quick visibility: what would change?
-      - name: rclone dry-run (debug)
+      # 1) Prove we're in the right place & the changed file exists remotely
+      - name: List remote (recursive) + show hashes
         env:
           RCLONE_DROPBOX_TOKEN: ${{ secrets.DROPBOX_TOKEN_JSON }}
           RCLONE_DROPBOX_CLIENT_ID: ${{ secrets.DROPBOX_CLIENT_ID }}
           RCLONE_DROPBOX_CLIENT_SECRET: ${{ secrets.DROPBOX_CLIENT_SECRET }}
         run: |
-          rclone sync ":dropbox:${SRC_PATH}" "./docs" --fast-list --checksum --dry-run -vv || true
+          echo "REMOTE TREE (:dropbox:${SRC_PATH})"
+          rclone lsf ":dropbox:${SRC_PATH}" -R || (echo "::error::Remote path not found. Fix SRC_PATH (case-sensitive) under your app folder." && exit 1)
+          echo "REMOTE HASHES (Dropbox content hash)"
+          rclone hashsum dropbox ":dropbox:${SRC_PATH}" -R || true
 
-      - name: Sync files from Dropbox (uses checksums; replaces + deletes)
+      # 2) Normal sync (verbose). If rclone thinks files are identical, you will see it.
+      - name: Sync (normal, verbose)
         env:
           RCLONE_DROPBOX_TOKEN: ${{ secrets.DROPBOX_TOKEN_JSON }}
           RCLONE_DROPBOX_CLIENT_ID: ${{ secrets.DROPBOX_CLIENT_ID }}
           RCLONE_DROPBOX_CLIENT_SECRET: ${{ secrets.DROPBOX_CLIENT_SECRET }}
         run: |
-          rclone sync ":dropbox:${SRC_PATH}" "./docs" --fast-list --checksum
+          rclone sync ":dropbox:${SRC_PATH}" "./docs" --fast-list -vv
 
-      # Ensure PDFs are binary (no text filters/diffs)
+      # 3) Show what actually changed in the working tree
+      - name: Git status after sync
+        run: |
+          echo "---- git status ----"
+          git status --porcelain=v1
+          echo "---- git diff names ----"
+          git diff --name-status || true
+
+      # 4) If nothing changed, force re-sync (covers equal size/modtime edge cases)
+      - name: Force re-sync if no changes detected
+        run: |
+          if [ -z "$(git status --porcelain=v1 docs)" ]; then
+            echo "No changes detected; forcing re-sync with --ignore-times"
+            rclone sync ":dropbox:${SRC_PATH}" "./docs" --fast-list --ignore-times -vv
+            echo "---- git status after forced re-sync ----"
+            git status --porcelain=v1
+          else
+            echo "Changes detected; skip forced re-sync."
+          fi
+
+      # 5) Make sure GitHub treats PDFs as binary
       - name: Ensure .gitattributes for PDFs
         run: |
           {
@@ -50,7 +75,7 @@ jobs:
             echo "*.PDF binary"
           } > .gitattributes
 
-      # Normalise/linearise PDFs and verify signatures & MIME
+      # 6) Normalise PDFs and verify
       - name: Normalise and verify PDFs
         run: |
           shopt -s nullglob globstar
@@ -65,10 +90,7 @@ jobs:
             fi
           done
 
-      # See if anything actually changed before we commit
-      - name: Show git status (debug)
-        run: git status --porcelain=v1
-
+      # 7) Commit (stage deletions too) and push
       - name: Commit and push changes
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
@@ -78,4 +100,4 @@ jobs:
           file_pattern: |
             .gitattributes
             docs
-          add_options: '--all'   # ensure deletions/renames are staged
+          add_options: '--all'
