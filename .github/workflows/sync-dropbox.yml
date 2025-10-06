@@ -2,7 +2,7 @@ name: Sync Files from Dropbox
 
 on:
   schedule:
-    - cron: '0 * * * *'
+    - cron: '0 6 * * *'   # daily at 06:00 UTC
   workflow_dispatch:
 
 permissions:
@@ -12,34 +12,21 @@ jobs:
   sync:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
+      - name: Checkout repository (main)
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          ref: main
 
       - name: Install tools
         run: |
           sudo apt-get update
           sudo apt-get install -y rclone qpdf file
 
-      # <<< CHANGE THIS to the folder under your *app folder* where the changed file lives
       - name: Define Dropbox source path
         run: echo "SRC_PATH=Website/Documents" >> "$GITHUB_ENV"
 
-      # 1) Prove we're in the right place & the changed file exists remotely
-      - name: List remote (recursive) + show hashes
-        env:
-          RCLONE_DROPBOX_TOKEN: ${{ secrets.DROPBOX_TOKEN_JSON }}
-          RCLONE_DROPBOX_CLIENT_ID: ${{ secrets.DROPBOX_CLIENT_ID }}
-          RCLONE_DROPBOX_CLIENT_SECRET: ${{ secrets.DROPBOX_CLIENT_SECRET }}
-        run: |
-          echo "REMOTE TREE (:dropbox:${SRC_PATH})"
-          rclone lsf ":dropbox:${SRC_PATH}" -R || (echo "::error::Remote path not found. Fix SRC_PATH (case-sensitive) under your app folder." && exit 1)
-          echo "REMOTE HASHES (Dropbox content hash)"
-          rclone hashsum dropbox ":dropbox:${SRC_PATH}" -R || true
-
-      # 2) Normal sync (verbose). If rclone thinks files are identical, you will see it.
-      - name: Sync (normal, verbose)
+      - name: Sync from Dropbox
         env:
           RCLONE_DROPBOX_TOKEN: ${{ secrets.DROPBOX_TOKEN_JSON }}
           RCLONE_DROPBOX_CLIENT_ID: ${{ secrets.DROPBOX_CLIENT_ID }}
@@ -47,27 +34,6 @@ jobs:
         run: |
           rclone sync ":dropbox:${SRC_PATH}" "./docs" --fast-list -vv
 
-      # 3) Show what actually changed in the working tree
-      - name: Git status after sync
-        run: |
-          echo "---- git status ----"
-          git status --porcelain=v1
-          echo "---- git diff names ----"
-          git diff --name-status || true
-
-      # 4) If nothing changed, force re-sync (covers equal size/modtime edge cases)
-      - name: Force re-sync if no changes detected
-        run: |
-          if [ -z "$(git status --porcelain=v1 docs)" ]; then
-            echo "No changes detected; forcing re-sync with --ignore-times"
-            rclone sync ":dropbox:${SRC_PATH}" "./docs" --fast-list --ignore-times -vv
-            echo "---- git status after forced re-sync ----"
-            git status --porcelain=v1
-          else
-            echo "Changes detected; skip forced re-sync."
-          fi
-
-      # 5) Make sure GitHub treats PDFs as binary
       - name: Ensure .gitattributes for PDFs
         run: |
           {
@@ -75,7 +41,6 @@ jobs:
             echo "*.PDF binary"
           } > .gitattributes
 
-      # 6) Normalise PDFs and verify
       - name: Normalise and verify PDFs
         run: |
           shopt -s nullglob globstar
@@ -90,10 +55,13 @@ jobs:
             fi
           done
 
-      # 7) Commit (stage deletions too) and push
-      - name: Commit and push changes
+      - name: Show git status (debug)
+        run: git status --porcelain=v1
+
+      - name: Commit and push changes (to main)
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
+          branch: main
           commit_message: 'Docs: Auto-sync from Dropbox'
           commit_user_name: 'GitHub Actions Bot'
           commit_user_email: 'actions@github.com'
@@ -101,3 +69,11 @@ jobs:
             .gitattributes
             docs
           add_options: '--all'
+
+      # 🔎 Prove the file is on GitHub (origin/main) after push
+      - name: Verify file on remote (origin/main)
+        run: |
+          git fetch origin main --depth=1
+          git cat-file -e origin/main:docs/CV/KimTaveras_CV.pdf || (echo "::error::File not on remote main"; exit 1)
+          echo "OK: docs/CV/KimTaveras_CV.pdf is present on origin/main"
+          git log -1 --stat -- docs/CV/KimTaveras_CV.pdf
