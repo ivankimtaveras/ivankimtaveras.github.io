@@ -12,7 +12,7 @@ jobs:
   sync:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
@@ -20,31 +20,40 @@ jobs:
       - name: Install tools
         run: |
           sudo apt-get update
-          sudo apt-get install -y rclone qpdf
+          sudo apt-get install -y rclone qpdf file
 
-      - name: Configure rclone token for Dropbox
+      - name: Configure rclone token (Dropbox App Folder)
         run: |
           echo 'RCLONE_DROPBOX_TOKEN={"access_token":"${{ secrets.DROPBOX_ACCESS_TOKEN }}","token_type":"bearer","expiry":"0001-01-01T00:00:00Z"}' >> "$GITHUB_ENV"
 
-      - name: Sync files from Dropbox (app-folder scope; no leading /)
+      - name: Sync from Dropbox (paths relative to app folder)
         run: |
           rclone sync ":dropbox:Website/Documents" "./docs" --fast-list
 
-      # Ensure GitHub treats PDFs as binary (prevents text render fallback)
+      # Ensure PDFs are binary (no text filters/diffs)
       - name: Ensure .gitattributes for PDFs
         run: |
-          echo "*.pdf binary" > .gitattributes
-          echo "*.PDF binary" >> .gitattributes
+          {
+            echo "*.pdf binary"
+            echo "*.PDF binary"
+          } > .gitattributes
 
-      # Normalise PDFs so they start with %PDF- and are web-friendly
-      - name: Normalise PDFs
+      # Normalise/linearise PDFs and verify signatures & MIME
+      - name: Normalise and verify PDFs
         run: |
           shopt -s nullglob globstar
           for f in docs/**/*.pdf docs/*.pdf docs/**/*.PDF docs/*.PDF; do
             qpdf --linearize "$f" "$f.qpdf" && mv -f "$f.qpdf" "$f"
+            sig=$(hexdump -n 5 -v -e '/1 "%02X"' "$f" || true)
+            mime=$(file -b --mime-type "$f" || true)
+            echo "$f  sig=$sig  mime=$mime"
+            if [ "$sig" != "255044462D" ] || [ "$mime" != "application/pdf" ]; then
+              echo "::error::$f is not detected as a proper PDF"
+              exit 1
+            fi
           done
 
-      - name: Commit and push changes
+      - name: Commit and push
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: 'Docs: Auto-sync from Dropbox'
