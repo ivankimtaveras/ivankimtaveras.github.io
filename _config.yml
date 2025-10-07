@@ -1,4 +1,5 @@
 # _config.yml
 title: "Iván Kim Taveras"
 url: https://ivankimtaveras.github.io
+timezone: Europe/Rome   
 # baseurl: ""   # keep empty for a user/org site
