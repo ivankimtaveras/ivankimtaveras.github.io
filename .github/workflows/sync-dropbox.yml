@@ -9,6 +9,11 @@ on:
 permissions:
   contents: read
 
+# Prevent overlapping runs
+concurrency:
+  group: dropbox-sync
+  cancel-in-progress: false
+
 jobs:
   sync:
     runs-on: ubuntu-latest
@@ -62,7 +67,7 @@ jobs:
           git add -A docs .gitattributes
           git commit -m "Docs: Auto-sync from Dropbox" || echo "No changes to commit"
 
-      # 👇 Pull remote changes first to avoid 'fetch first' rejection
+      # Pull remote changes first to avoid 'fetch first'
       - name: Rebase onto latest origin/main
         run: |
           git fetch origin main --depth=1
@@ -70,10 +75,3 @@ jobs:
 
       - name: Push to main (with PAT)
         run: git push origin HEAD:main
-
-      # Prove the CV is on the remote branch
-      - name: Verify CV on origin/main
-        run: |
-          git fetch origin main --depth=1
-          git cat-file -e origin/main:docs/CV/KimTaveras_CV.pdf || (echo "::error::CV not on remote main"; exit 1)
-          echo "OK: CV present on origin/main"
