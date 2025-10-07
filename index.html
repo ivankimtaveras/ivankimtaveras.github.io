@@ -25,14 +25,9 @@
       }
     </script>
 
+    <script>tailwind = { config: { darkMode: 'class' } }</script>
     <script src="https://cdn.tailwindcss.com"></script>
-
-    <script>
-      tailwind.config = {
-        darkMode: 'class'
-      }
-    </script>
-
+    
     <!-- Icon -->
     <link rel="icon" type="image/png" href="{{ '/docs/icon/initials_icon.png' | relative_url }}">
 
@@ -109,7 +104,7 @@
                                 <a
                                   href="{{ '/docs/CV/KimTaveras_CV.pdf' | relative_url }}?v={{ site.github.build_revision }}"
                                   target="_blank"
-                                  rel="noopener"  <!-- or "noopener noreferrer" -->
+                                  rel="noopener"
                                   class="inline-flex items-center justify-center px-4 py-2 border border-transparent
                                          text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700
                                          dark:bg-blue-500 dark:hover:bg-blue-600 shadow-sm">
@@ -271,7 +266,6 @@
       </div>
     </footer>
 
-
     <script>
         // --- All Interactive Logic ---
         document.addEventListener('DOMContentLoaded', (event) => {
@@ -303,6 +297,7 @@
     </script>
 </body>
 </html>
+
 
 
 
