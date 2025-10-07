@@ -263,10 +263,14 @@
 
     <!-- Footer -->
     <footer class="bg-gray-100 dark:bg-gray-800">
-        <div class="max-w-6xl mx-auto py-4 px-4 sm:px-6 lg:px-8 text-center text-gray-500 dark:text-gray-400">
-            <p>&copy; <span id="year"></span> Iván Jomin Kim Taveras. Last updated: October 2025.</p>
-        </div>
+      <div class="max-w-6xl mx-auto py-4 px-4 sm:px-6 lg:px-8 text-center text-gray-500 dark:text-gray-400">
+        <p>
+          &copy; {{ site.time | date: "%Y" }} Iván Jomin Kim Taveras.
+          Last updated: {{ site.time | date: "%-d %B %Y" }}.
+        </p>
+      </div>
     </footer>
+
 
     <script>
         // --- All Interactive Logic ---
@@ -277,9 +281,6 @@
                 localStorage.theme = isDark ? 'dark' : 'light';
             }
             document.getElementById('theme-toggle-btn').addEventListener('click', toggleTheme);
-            
-            // --- Set Footer Year ---
-            document.getElementById('year').textContent = new Date().getFullYear();
 
             // --- Bot-safe Email Link ---
             const user = 'ivan.kimtaveras';
@@ -302,6 +303,7 @@
     </script>
 </body>
 </html>
+
 
 
 
