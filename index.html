@@ -159,7 +159,7 @@
                                       class="text-blue-600 dark:text-blue-400 hover:underline font-medium">
                                       View Paper (PDF)
                                     </a>
-                                    <button onclick="toggleVisibility('RainySeasons-abstract', this)" class="text-blue-600 dark:text-blue-400 hover:underline flex items-center font-medium">
+                                    <button onclick="toggleVisibility('RainySeasons-abstract', this)" aria-expanded="false" class="text-blue-600 dark:text-blue-400 hover:underline flex items-center font-medium">
                                         Abstract <svg class="h-4 w-4 ml-1 toggle-arrow" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" /></svg>
                                     </button>
                                 </div>
@@ -182,7 +182,7 @@
                                       class="text-blue-600 dark:text-blue-400 hover:underline font-medium">
                                       View Paper (PDF)
                                     </a>
-                                    <button onclick="toggleVisibility('FSTS-abstract', this)" class="text-blue-600 dark:text-blue-400 hover:underline flex items-center font-medium">
+                                    <button onclick="toggleVisibility('FSTS-abstract', this)" aria-expanded="false" class="text-blue-600 dark:text-blue-400 hover:underline flex items-center font-medium">
                                         Abstract <svg class="h-4 w-4 ml-1 toggle-arrow" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" /></svg>
                                     </button>
                                 </div>
@@ -203,7 +203,7 @@
                                       class="text-blue-600 dark:text-blue-400 hover:underline font-medium">
                                       View Paper (PDF)
                                     </a>
-                                    <button onclick="toggleVisibility('AKT-abstract', this)" class="text-blue-600 dark:text-blue-400 hover:underline flex items-center font-medium">
+                                    <button onclick="toggleVisibility('AKT-abstract', this)" aria-expanded="false" class="text-blue-600 dark:text-blue-400 hover:underline flex items-center font-medium">
                                         Abstract <svg class="h-4 w-4 ml-1 toggle-arrow" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" /></svg>
                                     </button>
                                 </div>
@@ -228,7 +228,7 @@
                     <section id="teaching">
                         <div class="flex items-center">
                             <h2 class="text-2xl font-bold border-b-2 border-blue-500 pb-2 mb-6 text-gray-900 dark:text-white">Teaching</h2>
-                            <button onclick="toggleVisibility('teaching-details', this)" class="ml-4 mb-6 p-1 text-gray-600 dark:text-gray-300">
+                            <button onclick="toggleVisibility('teaching-details', this)" aria-expanded="false" class="ml-4 mb-6 p-1 text-gray-600 dark:text-gray-300">
                                 <svg class="h-6 w-6 toggle-arrow" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" /></svg>
                             </button>
                         </div>
@@ -289,13 +289,16 @@
             const element = document.getElementById(elementId);
             const arrow = button.querySelector('.toggle-arrow');
             if (element) {
-                element.classList.toggle('hidden');
+                const isHidden = element.classList.toggle('hidden');
                 arrow.classList.toggle('rotated');
+                // Update the aria-expanded attribute
+                button.setAttribute('aria-expanded', !isHidden); 
             }
         }
     </script>
 </body>
 </html>
+
 
 
 
