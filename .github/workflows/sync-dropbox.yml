@@ -49,11 +49,43 @@ jobs:
             echo "*.PDF binary"
           } > .gitattributes
 
-      # Make sure the synced folders are writable before qpdf writes into them
-      - name: Make docs writable
+      # DEBUG ONLY: collect why qpdf cannot create its output file.
+      # Never fails the job, so the run stops at Normalise PDFs and pushes nothing.
+      - name: Debug qpdf write failure
         run: |
-          ls -ld docs docs/*
-          chmod -R u+rwX docs
+          set +x
+          echo "::group::identity and umask"; id; umask; echo "::endgroup::"
+          echo "::group::folder and file permissions"
+          stat -c '%A %U:%G %n' docs docs/CV docs/papers docs/policy_reports
+          stat -c '%A %U:%G %n' docs/CV/*.pdf docs/papers/*.pdf docs/policy_reports/*.pdf
+          findmnt -T docs/CV || true
+          lsattr -d docs/CV docs/papers 2>/dev/null || true
+          echo "::endgroup::"
+          echo "::group::write tests"
+          touch docs/CV/_plain_write_test && echo "plain touch: ok" && rm -f docs/CV/_plain_write_test || echo "plain touch: FAILED"
+          echo "::endgroup::"
+          echo "::group::qpdf version and label"
+          qpdf --version | head -1
+          cat /proc/self/attr/current 2>/dev/null || echo "no LSM label for shell"
+          echo; echo "::endgroup::"
+          echo "::group::qpdf output variants"
+          qpdf --linearize docs/CV/KimTaveras_CV.pdf "$RUNNER_TEMP/a.pdf"; echo "to temp dir with --linearize: exit $?"
+          qpdf docs/CV/KimTaveras_CV.pdf "$RUNNER_TEMP/b.pdf"; echo "to temp dir without --linearize: exit $?"
+          qpdf --linearize docs/CV/KimTaveras_CV.pdf "docs/CV/_c_test.pdf"; echo "same dir, other name: exit $?"
+          qpdf --linearize docs/CV/KimTaveras_CV.pdf "docs/CV/_d_test.pdf.qpdf"; echo "same dir, .pdf.qpdf name: exit $?"
+          rm -f docs/CV/_c_test.pdf docs/CV/_d_test.pdf.qpdf
+          echo "::endgroup::"
+          echo "::group::syscall trace (strace)"
+          sudo apt-get install -y strace >/dev/null 2>&1 || echo "strace install failed"
+          strace -f -e trace=openat,creat,rename -o "$RUNNER_TEMP/strace.txt" \
+            qpdf --linearize docs/CV/KimTaveras_CV.pdf docs/CV/KimTaveras_CV.pdf.qpdf || true
+          grep -E 'KimTaveras|EACCES|EPERM' "$RUNNER_TEMP/strace.txt" | tail -20 || true
+          echo "::endgroup::"
+          echo "::group::kernel and AppArmor denials"
+          sudo dmesg 2>/dev/null | grep -i -E 'apparmor|denied' | tail -20 || echo "dmesg not readable"
+          sudo aa-status 2>/dev/null | head -30 || echo "aa-status not available"
+          echo "::endgroup::"
+          exit 0
 
       # Normalise PDFs (optional but safe)
       - name: Normalise PDFs
