@@ -49,18 +49,20 @@ jobs:
             echo "*.PDF binary"
           } > .gitattributes
 
-      # Make sure the synced folders are writable before qpdf writes into them
-      - name: Make docs writable
-        run: |
-          ls -ld docs docs/*
-          chmod -R u+rwX docs
-
       # Normalise PDFs (optional but safe)
+      # qpdf writes to a temp file outside docs/, then the result is copied back.
+      # If qpdf fails on a file, the original is kept and a warning is shown.
       - name: Normalise PDFs
         run: |
           shopt -s nullglob globstar
           for f in docs/**/*.pdf docs/*.pdf docs/**/*.PDF docs/*.PDF; do
-            qpdf --linearize "$f" "$f.qpdf" && mv -f "$f.qpdf" "$f"
+            tmp=$(mktemp "$RUNNER_TEMP/norm.XXXXXX.pdf")
+            if qpdf --linearize "$f" "$tmp"; then
+              cp -f "$tmp" "$f"
+            else
+              echo "::warning file=$f::qpdf could not optimize this PDF; keeping the original"
+            fi
+            rm -f "$tmp"
           done
 
       - name: Configure git author
