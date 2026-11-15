@@ -49,6 +49,12 @@ jobs:
             echo "*.PDF binary"
           } > .gitattributes
 
+      # Make sure the synced folders are writable before qpdf writes into them
+      - name: Make docs writable
+        run: |
+          ls -ld docs docs/*
+          chmod -R u+rwX docs
+
       # Normalise PDFs (optional but safe)
       - name: Normalise PDFs
         run: |
